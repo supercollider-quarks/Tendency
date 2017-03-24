@@ -1,10 +1,11 @@
 Tendency {
 	var <>parX, <>parY, <>parA, <>parB, <>defDist;
-	
+	classvar <>maxIterations = 10; //increase for certain cases of betaRand; causes potentially higher language CPU load
+
 	*new {|parX = 1.0, parY = 0.0, parA = 0.1, parB = 0.1, defDist = \uniform|
 		^super.newCopyArgs(parX, parY, parA, parB, defDist);
 		}
-		
+
 	at {|time = 0.0, dist|
 		dist = dist ?? {defDist};
 		^case
@@ -24,37 +25,37 @@ Tendency {
 			{dist == \hcos} {this.hcosAt(time)}
 			{dist == \logistic} {this.logisticAt(time)}
 			{dist == \arcsin} {this.arcsinAt(time)}
-			{true} {this.uniformAt(time)};		
+			{true} {this.uniformAt(time)};
 	}
-	
+
 	uniformAt {|time|
 		^this.parXAt(time).rrand(this.parYAt(time))
 		}
-		
+
 	parXAt {|time|
 		^this.valAt(parX.value(time), time);
 		}
-		
+
 	parYAt {|time|
 		^this.valAt(parY.value(time), time);
 		}
-	
+
 	valAt {|obj, time|
 		^(obj.isKindOf(Env)).if({obj[time]}, { obj.value(time) })
 		}
-		
+
 	lpRandAt {|time|
 		^min(this.at(time, \uniform), this.at(time, \uniform))
 		}
-		
+
 	hpRandAt {|time|
 		^max(this.at(time, \uniform), this.at(time, \uniform))
 		}
-		
+
 	meanRandAt {|time|
 		^(this.at(time, \uniform) + this.at(time, \uniform) * 0.5)
 		}
-		
+
 	betaRandAt {|time|
 		var sum, rprob1, rprob2, temp, curparY, curparX, i;
 		sum = 2;
@@ -64,11 +65,12 @@ Tendency {
 		curparX = this.parXAt(time);
 		curparY = this.parYAt(time);
 		while ({
-			(sum > 1) && (i < 10) 
+			(sum > 1) && (i < maxIterations)
 			}, {
 			temp = 1.0.rand ** rprob1;
 			sum = temp + (1.0.rand ** rprob2);
 			i = i + 1;
+			(i == maxIterations).if({"Tendency: maxIterations reached. Consider increasing Tendency.maxIterations for accurate results".warn};
 			});
 		^((temp / sum) * (curparX - curparY) + curparY)
 		}
@@ -82,7 +84,7 @@ Tendency {
 //			});
 //		^(this.parYAt(time) * tan(tmp * pi)) + this.parXAt(time);
 //		}
-	
+
 	// cauchy
 	// parX = spread, parA=1 => positive half only
 	cauchyRandAt {|time|
@@ -105,8 +107,8 @@ Tendency {
 		b = 1.0.rand;
 		^((-2 * log(1 - a)).sqrt * cos(2pi * b) * this.parXAt(time) + this.parYAt(time));
 		}
-	
-	// parX = mean	
+
+	// parX = mean
 	poissonRandAt {|time|
 		var count = -1, ranVal, tmp;
 		ranVal = 1.0.rand;
@@ -118,7 +120,7 @@ Tendency {
 			});
 		^count;
 		}
-	
+
 	// don't cross 0! don't do it!
 	expRandAt {|time|
 		^exprand(this.parYAt(time), this.parXAt(time));
@@ -131,14 +133,14 @@ Tendency {
 		^((xs/this.parXAt(time)) + this.parYAt(time))
 		}
 
-	// gamma distribution, parX = mean	
+	// gamma distribution, parX = mean
 	gammaAt { |time|
 		var sum;
 		sum = 1.0;
 		for(1, this.parXAt(time), { sum = sum * (1 - 1.0.rand) });
 		^(log(sum).neg + this.parYAt(time));
 	}
-	
+
 	// laplace
 	// parX = dispersion or spread
 	laplaceAt { |time|
@@ -170,7 +172,7 @@ Tendency {
 
 	// hcos
 	// hyperbolic cosine distribution
-	hcosAt { |time|	
+	hcosAt { |time|
 		var u, val;
 		u = 1.0.rand;
 		val = log(tan(0.5pi * u));
@@ -182,7 +184,7 @@ Tendency {
 	// logistic distribution
 	// parX = dispersion (beta)
 	// we keep alpha as 1 for simplicity
-	logisticAt { |time|	
+	logisticAt { |time|
 		var u, val;
 		u = 1.0.rand;
 		val = log(u.reciprocal - 1);
@@ -191,7 +193,7 @@ Tendency {
 
 	// arcsin
 	// arcsin distribution
-	arcsinAt { |time|	
+	arcsinAt { |time|
 		var u, val;
 		u = 1.0.rand;
 		val = (1 - sin(pi * (u - 0.5))) * 0.5;
@@ -199,7 +201,7 @@ Tendency {
 	}
 
 
-	// may be broken		
+	// may be broken
 	embedInStream {| inval, dist, parA, parB |
 		var startTime, thisVal, thisTime;
 		startTime = thisThread.beats;
@@ -210,11 +212,11 @@ Tendency {
 			}
 		^inval;
 	}
-		
+
 	asStream { |dist|
 		^Routine({ arg inval; this.embedInStream(inval, dist, parA, parB) });
 	}
-			
+
 }
 
 +SimpleNumber {
