@@ -70,7 +70,7 @@ Tendency {
 			temp = 1.0.rand ** rprob1;
 			sum = temp + (1.0.rand ** rprob2);
 			i = i + 1;
-			(i == maxIterations).if({"Tendency: maxIterations reached. Consider increasing Tendency.maxIterations for accurate results".warn};
+			(i == maxIterations).if({"Tendency: maxIterations reached. Consider increasing Tendency.maxIterations for accurate results".warn});
 			});
 		^((temp / sum) * (curparX - curparY) + curparY)
 		}
