@@ -68,6 +68,10 @@ A default distribution to use.
 returns:: a new code::Tendency::
 
 
+METHOD:: maxIterations
+This defines the maximum number of iterations when calculating link::#-betaRandAt#beta distribution::. In certain cases this number needs to be increased to obtain a more accurate distribution, which will also increase CPU load/time needed for the calculation.
+
+
 INSTANCEMETHODS::
 
 METHOD:: at
@@ -240,6 +244,7 @@ METHOD:: betaRandAt
 Beta distribution.
 Convenience method for code::.at(time, \betaRand)::.
 This distribution takes two extra parameters parA and parB to describe where the likelihood that a random value will occur near parX (parA) or parY (parB).
+Also see link::#*maxIterations::.
 
 code::
 // parA = parB = 0.5: histogram has symmetrical shape
